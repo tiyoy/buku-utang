@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="description" content="Catat hutang &amp; piutang dengan mudah — rekap per orang, pengingat WhatsApp, nota digital, dan mode offline.">
+  <meta name="theme-color" content="#4f46e5">
+  <title>Buku Utang Simpel - Catat Utang & Piutang Mudah</title>
+
+  <!-- Remixicon -->
+  <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
+
+  <!-- PWA -->
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" type="image/png" href="icons/icon-192.png">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="Buku Utang">
+
+  <!-- Custom Styles -->
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+
+<body>
+
+  <div id="app">
+
+    <!-- Header Bar with Top Horizontal Navigation -->
+    <header class="top-header">
+      <div class="brand-title">
+        <div class="brand-icon"><i class="ri-book-read-fill"></i></div>
+        <span>Buku Utang</span>
+      </div>
+
+      <!-- Desktop Horizontal Nav Menu -->
+      <nav class="desktop-nav">
+        <button class="nav-item active" data-view="dashboard">
+          <i class="ri-list-check-2"></i> Daftar Utang
+        </button>
+        <button class="nav-item" data-view="contacts">
+          <i class="ri-contacts-book-line"></i> Rekap Per Orang
+        </button>
+        <button class="nav-item" data-view="analytics">
+          <i class="ri-pie-chart-line"></i> Laporan
+        </button>
+        <button class="nav-item" data-view="settings">
+          <i class="ri-save-3-line"></i> Backup Data
+        </button>
+      </nav>
+
+      <div class="header-actions">
+        <button id="btn-quick-sample" class="icon-btn" title="Isi Contoh Data Demo">
+          <i class="ri-magic-line"></i> <span class="btn-text-label">Contoh Data</span>
+        </button>
+        <button id="btn-open-backup" class="icon-btn" title="Simpan Data">
+          <i class="ri-download-2-line"></i> <span class="btn-text-label">Backup</span>
+        </button>
+        <button id="btn-install-pwa" class="icon-btn" hidden title="Install aplikasi di HP / komputer">
+          <i class="ri-device-line"></i> <span class="btn-text-label">Install</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="main-container">
+
+      <!-- VIEW 1: DAFTAR UTANG & UTANG SAYA -->
+      <section id="view-dashboard" class="view-section active">
+
+        <!-- Summary Cards Grid -->
+        <div class="metrics-grid">
+
+          <div class="metric-card piutang-card">
+            <div class="metric-header">
+              <span>Orang Utang ke Saya</span>
+              <div class="metric-icon-badge"><i class="ri-arrow-down-circle-fill"></i></div>
+            </div>
+            <div id="metric-total-piutang" class="metric-value" style="color: var(--piutang);">Rp 0</div>
+            <div class="metric-sub">Total uang saya yang belum dibayar orang</div>
+          </div>
+
+          <div class="metric-card hutang-card">
+            <div class="metric-header">
+              <span>Saya Utang ke Orang</span>
+              <div class="metric-icon-badge"><i class="ri-arrow-up-circle-fill"></i></div>
+            </div>
+            <div id="metric-total-hutang" class="metric-value" style="color: var(--hutang);">Rp 0</div>
+            <div class="metric-sub">Total uang yang belum saya bayar ke orang</div>
+          </div>
+
+          <div class="metric-card saldo-card">
+            <div class="metric-header">
+              <span>Sisa / Selisih Uang</span>
+              <div class="metric-icon-badge"><i class="ri-equalizer-line"></i></div>
+            </div>
+            <div id="metric-saldo-bersih" class="metric-value" style="color: var(--primary);">Rp 0</div>
+            <div class="metric-sub">Selisih (Uang di orang dikurangi utang saya)</div>
+          </div>
+
+        </div>
+
+        <!-- Overdue Alert Banner -->
+        <div id="alert-banner-container"></div>
+
+        <!-- Search & Filter Bar -->
+        <div class="search-filter-section">
+          <div class="search-box">
+            <i class="ri-search-line"></i>
+            <input type="text" id="search-input" placeholder="Cari nama orang atau catatan...">
+          </div>
+
+          <div class="filter-pills">
+            <button class="pill-btn active" data-filter="all">Semua Catatan</button>
+            <button class="pill-btn" data-filter="piutang">Orang Utang ke Saya</button>
+            <button class="pill-btn" data-filter="hutang">Saya Utang ke Orang</button>
+            <button class="pill-btn" data-filter="overdue">Jatuh Tempo 🔥</button>
+            <button class="pill-btn" data-filter="cicilan">Belum Lunas</button>
+            <button class="pill-btn" data-filter="lunas">Sudah Lunas</button>
+          </div>
+        </div>
+
+        <!-- Transactions List Header -->
+        <div class="section-header">
+          <h3 class="section-title">Daftar Catatan Tanggungan</h3>
+          <span id="transaction-count" style="font-size: 0.9rem; font-weight: 700; color: var(--text-muted);">0
+            Catatan</span>
+        </div>
+
+        <div id="transaction-list" class="transaction-list">
+          <!-- JS Dynamic Render -->
+        </div>
+
+      </section>
+
+      <!-- VIEW 2: REKAP PER ORANG -->
+      <section id="view-contacts" class="view-section">
+        <div class="section-header">
+          <h3 class="section-title">Rekap Total Per Orang</h3>
+          <span id="contact-count" style="font-size: 0.9rem; font-weight: 700; color: var(--text-muted);">0 Orang</span>
+        </div>
+        <div id="contact-list" class="transaction-list">
+          <!-- JS Dynamic Render -->
+        </div>
+      </section>
+
+      <!-- VIEW 3: LAPORAN RINGKAS -->
+      <section id="view-analytics" class="view-section">
+        <div class="section-header">
+          <h3 class="section-title">Laporan Ringkasan Keuangan</h3>
+        </div>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px;">
+          <div class="chart-card">
+            <h4 style="font-weight: 800;"><i class="ri-pie-chart-fill" style="color: var(--primary);"></i> Perbandingan
+              Uang</h4>
+            <div class="canvas-wrapper">
+              <canvas id="chart-pie" width="300" height="220"></canvas>
+            </div>
+          </div>
+
+          <div class="chart-card">
+            <h4 style="font-weight: 800;"><i class="ri-bar-chart-2-fill" style="color: var(--piutang);"></i> Status
+              Pelunasan</h4>
+            <div class="canvas-wrapper">
+              <canvas id="chart-bar" width="300" height="220"></canvas>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- VIEW 4: SIMPAN & BACKUP DATA -->
+      <section id="view-settings" class="view-section">
+        <div class="section-header">
+          <h3 class="section-title">Pengaturan & Backup File</h3>
+        </div>
+
+        <div class="chart-card">
+          <h4 style="font-weight: 800;"><i class="ri-file-download-line" style="color: var(--primary);"></i> Simpan
+            Cadangan Data</h4>
+          <p style="font-size: 0.9rem; color: var(--text-muted);">Unduh file catatan agar bisa disimpan di HP / Komputer
+            Anda.</p>
+
+          <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-top: 10px;">
+            <button id="btn-export-json" class="sm-btn pay-btn"><i class="ri-download-line"></i> Download File
+              JSON</button>
+            <button id="btn-export-csv" class="sm-btn"><i class="ri-file-excel-line"></i> Download Excel (CSV)</button>
+            <label class="sm-btn" style="cursor: pointer;">
+              <i class="ri-upload-line"></i> Buka File Cadangan
+              <input type="file" id="input-import-json" accept=".json" style="display: none;">
+            </label>
+          </div>
+        </div>
+
+        <div class="chart-card" style="border-color: #fee2e2;">
+          <h4 style="color: var(--hutang); font-weight: 800;"><i class="ri-delete-bin-line"></i> Hapus Semua Catatan
+          </h4>
+          <p style="font-size: 0.9rem; color: var(--text-muted);">Hapus seluruh catatan yang tersimpan di HP ini.</p>
+          <div style="margin-top: 10px;">
+            <button id="btn-reset-data" class="sm-btn"
+              style="background: var(--hutang-bg); color: var(--hutang); border-color: var(--hutang);">
+              <i class="ri-delete-bin-line"></i> Hapus Seluruh Data
+            </button>
+          </div>
+        </div>
+      </section>
+
+    </main>
+
+    <!-- Mobile Bottom Nav -->
+    <nav class="bottom-nav">
+      <button class="bottom-nav-item active" data-view="dashboard">
+        <i class="ri-list-check-2"></i>
+        <span>Catatan</span>
+      </button>
+      <button class="bottom-nav-item" data-view="contacts">
+        <i class="ri-contacts-book-line"></i>
+        <span>Daftar Orang</span>
+      </button>
+      <button class="bottom-nav-item" data-view="analytics">
+        <i class="ri-pie-chart-line"></i>
+        <span>Laporan</span>
+      </button>
+      <button class="bottom-nav-item" data-view="settings">
+        <i class="ri-save-3-line"></i>
+        <span>Backup</span>
+      </button>
+    </nav>
+
+    <!-- Floating Action Button (FAB) -->
+    <button id="btn-fab-add" class="fab" title="Catat Baru">
+      <i class="ri-add-line" style="font-size: 1.4rem;"></i>
+      <span>+ Catat Baru</span>
+    </button>
+  </div>
+
+  <!-- ================= MODALS ================= -->
+
+  <!-- MODAL 1: Tambah Catatan Baru -->
+  <div id="modal-transaction" class="modal-overlay">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 id="modal-tx-title" class="modal-title">Catat Utang Baru</h3>
+        <button class="close-btn" data-close="modal-transaction"><i class="ri-close-line"></i></button>
+      </div>
+
+      <form id="form-transaction">
+        <input type="hidden" id="tx-id">
+
+        <!-- Type Selection -->
+        <div class="form-group">
+          <label>Pilih Jenis Catatan:</label>
+          <div class="type-selector">
+            <button type="button" class="type-btn active piutang" data-type="piutang">
+              <i class="ri-arrow-down-circle-fill" style="font-size: 1.5rem;"></i>
+              <span>Orang Utang ke Saya</span>
+              <small style="font-size: 0.72rem; font-weight: 500;">(Dia yang pinjam uang)</small>
+            </button>
+            <button type="button" class="type-btn hutang" data-type="hutang">
+              <i class="ri-arrow-up-circle-fill" style="font-size: 1.5rem;"></i>
+              <span>Saya Utang ke Orang</span>
+              <small style="font-size: 0.72rem; font-weight: 500;">(Saya yang pinjam uang)</small>
+            </button>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="tx-name">Nama Orang *</label>
+          <input type="text" id="tx-name" class="form-control" placeholder="Contoh: Pak Budi / Bu Ani" required>
+        </div>
+
+        <div class="form-group">
+          <label for="tx-phone">Nomor WhatsApp (Opsional)</label>
+          <input type="tel" id="tx-phone" class="form-control" placeholder="Contoh: 081234567890">
+        </div>
+
+        <div class="form-group">
+          <label for="tx-amount">Berapa Jumlah Uang (Rp)? *</label>
+          <input type="text" inputmode="numeric" id="tx-amount" class="form-control" placeholder="0" required>
+          <div class="quick-amount-tags">
+            <button type="button" class="tag-btn" data-add="50000">+50rb</button>
+            <button type="button" class="tag-btn" data-add="100000">+100rb</button>
+            <button type="button" class="tag-btn" data-add="500000">+500rb</button>
+            <button type="button" class="tag-btn" data-add="1000000">+1 Jt</button>
+          </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+          <div class="form-group">
+            <label for="tx-date">Tanggal Catat</label>
+            <input type="date" id="tx-date" class="form-control" required>
+          </div>
+
+          <div class="form-group">
+            <label for="tx-due">Tanggal Harus Lunas</label>
+            <input type="date" id="tx-due" class="form-control">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="tx-category">Kategori</label>
+          <select id="tx-category" class="form-control">
+            <option value="Pribadi">Pertemanan / Usaha Pribadi</option>
+            <option value="Usaha">Dagang / Warung</option>
+            <option value="Pinjaman">Pinjaman Uang</option>
+            <option value="Belanja">Belanja / Goods</option>
+            <option value="Lainnya">Lainnya</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="tx-notes">Untuk Apa / Catatan Khusus</label>
+          <input type="text" id="tx-notes" class="form-control" placeholder="Contoh: Pinjam modal usaha / Beli barang">
+        </div>
+
+        <button type="submit" class="submit-btn"><i class="ri-save-line"></i> Simpan Catatan</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL 2: Catat Bayar / Cicil -->
+  <div id="modal-payment" class="modal-overlay">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 class="modal-title">Catat Pembayaran / Cicilan</h3>
+        <button class="close-btn" data-close="modal-payment"><i class="ri-close-line"></i></button>
+      </div>
+
+      <div id="payment-summary-box"
+        style="background: #f8fafc; border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 14px; margin-bottom: 16px;">
+        <!-- Dynamic Summary -->
+      </div>
+
+      <form id="form-payment">
+        <input type="hidden" id="pay-tx-id">
+
+        <div class="form-group">
+          <label for="pay-amount">Berapa yang Dibayar (Rp)? *</label>
+          <input type="text" inputmode="numeric" id="pay-amount" class="form-control" placeholder="0" required>
+          <div class="quick-amount-tags">
+            <button type="button" id="btn-pay-full" class="tag-btn"
+              style="background: var(--piutang); color: white;">LUNASI SEMUA SISA</button>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="pay-date">Tanggal Bayar</label>
+          <input type="date" id="pay-date" class="form-control" required>
+        </div>
+
+        <div class="form-group">
+          <label for="pay-note">Catatan Pembayaran</label>
+          <input type="text" id="pay-note" class="form-control" placeholder="Contoh: Bayar Cash / Transfer Bank">
+        </div>
+
+        <button type="submit" class="submit-btn"><i class="ri-check-line"></i> Simpan Pembayaran</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL 3: Kirim Pengingat WhatsApp -->
+  <div id="modal-wa" class="modal-overlay">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 class="modal-title"><i class="ri-whatsapp-line" style="color: #25d366;"></i> Kirim Pesan WA</h3>
+        <button class="close-btn" data-close="modal-wa"><i class="ri-close-line"></i></button>
+      </div>
+
+      <div class="form-group">
+        <label>Pilih Gaya Bahasa Pesan:</label>
+        <select id="wa-template-type" class="form-control">
+          <option value="santai">Biasa / Ramah (Teman)</option>
+          <option value="formal">Sopan / Formal (Usaha)</option>
+          <option value="overdue">Ingatkan (Sudah Lewat Tanggal)</option>
+          <option value="receipt">Rincian Total Sisa Tagihan</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>Isi Pesan WA yang Akan Dikirim:</label>
+        <textarea id="wa-preview-text" class="form-control" rows="6" style="font-size: 0.95rem;"></textarea>
+      </div>
+
+      <button id="btn-send-wa-now" class="submit-btn" style="background: #25d366; color: white;">
+        <i class="ri-whatsapp-line"></i> Buka WhatsApp Sekarang
+      </button>
+    </div>
+  </div>
+
+  <!-- MODAL 4: Nota Digital -->
+  <div id="modal-receipt" class="modal-overlay">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 class="modal-title">Nota Ringkasan Catatan</h3>
+        <button class="close-btn" data-close="modal-receipt"><i class="ri-close-line"></i></button>
+      </div>
+
+      <div id="receipt-card-container" class="receipt-card">
+        <!-- Dynamic Content -->
+      </div>
+
+      <div style="margin-top: 16px;">
+        <button id="btn-copy-receipt" class="submit-btn"
+          style="background: #f1f5f9; color: #0f172a; border: 1px solid #cbd5e1;">
+          <i class="ri-file-copy-line"></i> Salin Teks Nota
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL 5: Konfirmasi Hapus Catatan -->
+  <div id="modal-confirm-delete" class="modal-overlay">
+    <div class="modal-content" style="max-width: 400px; text-align: center;">
+      <div
+        style="width: 60px; height: 60px; border-radius: 50%; background: #fee2e2; color: #dc2626; display: flex; align-items: center; justify-content: center; font-size: 2rem; margin: 0 auto 12px;">
+        <i class="ri-delete-bin-line"></i>
+      </div>
+      <h3 style="font-size: 1.15rem; font-weight: 800; color: #0f172a; margin-bottom: 6px;">Hapus Catatan Ini?</h3>
+      <p style="font-size: 0.88rem; color: #64748b; margin-bottom: 20px;">Tindakan ini akan menghapus catatan secara
+        permanen dari buku utang Anda.</p>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+        <button type="button" class="sm-btn" data-close="modal-confirm-delete"
+          style="justify-content: center; padding: 12px; font-weight: 700;">Batal</button>
+        <button type="button" id="btn-confirm-delete-yes" class="submit-btn"
+          style="background: #dc2626; margin: 0; padding: 12px;">Ya, Hapus</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notifications -->
+  <div id="toast-container" class="toast-container"></div>
+
+  <!-- JS Logic -->
+  <script src="js/app.js"></script>
+</body>
+
+</html>
